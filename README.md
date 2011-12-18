@@ -14,8 +14,7 @@ The following uses the most common config options. See source for other options 
       width: 150,
       height: 150
     })
-
----
+    
 
 ## Sprite Rollover Usage
 
