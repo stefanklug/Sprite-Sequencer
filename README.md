@@ -2,7 +2,7 @@
 
 A jQuery plugin for creating animations with sprite sheets. Also included is the Sprite Rollover plugin (which is dependent on jquery.spriteSequencer.js) for creating animated sprite sheet rollovers.
 
-## Usage Sprite Sequencer
+## Sprite Sequencer Usage
 
 The following uses the most common config options. See source for other options and callbacks.
 
