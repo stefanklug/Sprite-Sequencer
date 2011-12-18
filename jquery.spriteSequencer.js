@@ -1,18 +1,8 @@
 (function($){
-
-  // Global Variables
-  var settings = {};
-  var spriteLoaded = false;
-  var playing = false;
-  var tickTimer = null;
-  var currentFrame = 1;
-  var targetFrame = null;
-  var playingBackwards = false;
-  var $el = null;
   
   // Default Settings
   var defaults = {
-    spriteSheet: '',
+    spriteSheet: null,
     autoPlay: false,
     columns: 10,
     totalFrames: 24,
@@ -32,87 +22,134 @@
 
   // Plugin Methods
   var methods = {
+
     init : function(options) {
-      settings = $.extend(defaults, options);
+
+      var settings = $.extend(defaults, options);
 
       return this.each(function(){
-        $el = $(this);
-        
-        var initalStyle = {
+
+        var $el = $(this);                
+
+        var data = $el.data('spriteSequencer', {
+          settings: settings,
+          spriteLoaded: false,
+          playing: false,
+          tickTimer: null,
+          currentFrame: 1,
+          targetFrame: null,
+          playingBackwards: false
+        });
+
+        var initialStyle = {
           width: settings.width, 
           height: settings.height, 
           'display': 'block', 
           'overflow': 'hidden' 
-        }
-        
-        $el.css(initalStyle)
+        };
+
+        $el.css(initialStyle);
+
         if (settings.onInit){
-          settings.onInit("test")
+          settings.onInit("test");
         }
-        currentFrame = settings.startFrame;        
-        preloadImage(settings.spriteSheet)
+
+        data.currentFrame = settings.startFrame;
+        preloadImage($el, settings.spriteSheet);
       })
 
     },
     play : function(){
-      if (spriteLoaded) {
-        if (playing || currentFrame == settings.totalFrames) {
-          clearInterval(tickTimer)
-          currentFrame = 1
+
+      return this.each(function(){
+
+        var $el = $(this);
+        var data = $el.data('spriteSequencer');
+
+        if (data.spriteLoaded) {
+          if (data.playing || data.currentFrame == data.settings.totalFrames) {
+            clearInterval(data.tickTimer);
+            data.currentFrame = 1;
+          };
+          play($el);
+        } else {
+          logError("play - sprite not yet loaded");
         };
-        play()
-      } else {
-        logError("play - sprite not yet loaded")
-      }
+
+      });
     }, 
     pause : function(){
-      clearInterval(tickTimer);
-      playing = false;
-      if (settings.onPause) {
-        settings.onPause();
-      }
+      return this.each(function(){
+        var $el = $(this);
+        var data = $el.data('spriteSequencer');
+
+        clearInterval(data.tickTimer);
+        data.playing = false;
+
+        if (data.settings.onPause) {
+          data.settings.onPause();
+        };
+      });
     },
     gotoAndStop : function(options){
-      if (options && options.frame >= 1) {
-        clearInterval(tickTimer);
-        playing = false;
-        currentFrame = options.frame;
-        updateBackgroundPosition();
-      } else {
-        logError("gotoAndStop - provide a valid frame");
-      };
+      return this.each(function(){
+        var $el = $(this);
+        var data = $el.data('spriteSequencer')
+
+        if (options && options.frame >= 1) {
+          clearInterval(data.tickTimer);
+          data.playing = false;
+          data.currentFrame = options.frame;
+          updateBackgroundPosition($el);
+        } else {
+          logError("gotoAndStop - provide a valid frame");
+        };
+
+      });
     }, 
     gotoAndPlay : function(options){
-      if (options && options.frame >= 1) {
-        clearInterval(tickTimer);
-        currentFrame = options.frame;
-        if (currentFrame > settings.totalFrames) {
-          currentFrame = settings.totalFrames;
-        };        
-        play();
-      } else {
-        logError("gotoAndPlay - provide a valid frame");
-      };
+      return this.each(function(){
+        var $el = $(this);
+        var data = $el.data('spriteSequencer');
+
+        if (options && options.frame >= 1) {
+          clearInterval(data.tickTimer);
+          data.currentFrame = options.frame;
+
+          if (data.currentFrame > data.settings.totalFrames) {
+            data.currentFrame = data.settings.totalFrames;
+          };        
+          play($el);
+        } else {
+          logError("gotoAndPlay - provide a valid frame");
+        };
+      })
     },
     playTo : function(options){
-      if (options && options.frame >= 1) {
-        clearInterval(tickTimer);
-        targetFrame = options.frame;
-        if (targetFrame > settings.totalFrames) {
-          targetFrame = settings.totalFrames;
-        };
-        if (currentFrame > targetFrame) {
-          currentFrame -= 1;
-          playingBackwards = true;
+      return this.each(function(){
+        var $el = $(this);
+        var data = $el.data('spriteSequencer');
+
+        if (options && options.frame >= 1) {
+          clearInterval(data.tickTimer);
+          data.targetFrame = options.frame;
+
+          if (data.targetFrame > data.settings.totalFrames) {
+            data.targetFrame = data.settings.totalFrames;
+          };
+          if (data.currentFrame > data.targetFrame) {
+            data.currentFrame -= 1;
+            data.playingBackwards = true;
+          } else {
+            data.playingBackwards = false
+          }
+          if (data.targetFrame != data.currentFrame) {          
+            play($el);
+          };
         } else {
-          playingBackwards = false
-        }
-        if (targetFrame != currentFrame) {          
-          play();
+          logError("playTo - provide a valid frame");
         };
-      } else {
-        logError("playTo - provide a valid frame");
-      };
+      })
     }  
   };
 
@@ -128,84 +165,92 @@
   };
 
   // Private Methods
-  function preloadImage(image) {
+  function preloadImage($el, image) {
+    data = $el.data('spriteSequencer');
     img = new Image()
     img.src = image;
     img.onload = function(){
-      spriteLoaded = true
+      data = $el.data('spriteSequencer');
+      data.spriteLoaded = true
       $el.css('background-image', 'url('+image+')');                  
-      if (settings.onSpriteLoaded){
-        settings.onSpriteLoaded()
+      if (data.settings.onSpriteLoaded){
+        data.settings.onSpriteLoaded()
       }
-      if (settings.autoPlay){
-        play()
+      if (data.settings.autoPlay){
+        play($el)
       }
     }
   }
   
-  function play(){
-    playing = true;
-    tick();
-    tickTimer = setInterval(tick, 1000/settings.fps);
-    if (settings.onPlay) {
-      settings.onPlay()
+  function play($el){
+    data = $el.data('spriteSequencer');
+    data.playing = true;
+    tick($el);
+    data.tickTimer = setInterval(function(){tick($el)}, 1000/data.settings.fps);
+    if (data.settings.onPlay) {
+      data.settings.onPlay()
     }
   }
      
-  function tick() {
-    updateBackgroundPosition();
-        
-    if (settings.onTick) {
-      settings.onTick(currentFrame);
+  function tick($el) {
+    data = $el.data('spriteSequencer');
+    updateBackgroundPosition($el);
+
+    if (data.settings.onTick) {
+      data.settings.onTick(data.currentFrame);
     }
-    
-    if (playingBackwards) {
-      if (settings.yoyo && currentFrame == 1) {
-        playingBackwards = false;
-        currentFrame ++
-      } else if (currentFrame == 1 || currentFrame == targetFrame) {
-        if (settings.loop && targetFrame == null) {
-          currentFrame = settings.totalFrames;
+
+    if (data.playingBackwards) {
+      if (data.settings.yoyo && data.currentFrame == 1) {
+        data.playingBackwards = false;
+        data.currentFrame ++
+      } else if (data.currentFrame == 1 || data.currentFrame == data.targetFrame) {
+
+        if (data.settings.loop && data.targetFrame == null) {
+          data.currentFrame = data.settings.totalFrames;
         } else {
-          playingBackwards = false;
-          playing = false;
-          clearInterval(tickTimer);
+          data.playingBackwards = false;
+          data.playing = false;
+          clearInterval(data.tickTimer);
         };
-        if (settings.onEnd) {
-          settings.onEnd();
+
+        if (data.settings.onEnd) {
+          data.settings.onEnd();
         }
-        targetFrame = null;
+        data.targetFrame = null;
       } else {
-        currentFrame --;
+        data.currentFrame --;
       } 
     } else {
-      if (currentFrame == settings.totalFrames || currentFrame == targetFrame){ 
-        if (settings.yoyo) {
-          playingBackwards = true
-          currentFrame --;
-        } else if (settings.loop && targetFrame == null){
-          currentFrame = 1;
+      if (data.currentFrame == data.settings.totalFrames || data.currentFrame == data.targetFrame){ 
+        if (data.settings.yoyo) {
+          data.playingBackwards = true
+          data.currentFrame --;
+        } else if (data.settings.loop && data.targetFrame == null){
+          data.currentFrame = 1;
         } else {
-          playing = false;
-          clearInterval(tickTimer);
+          data.playing = false;
+          clearInterval(data.tickTimer);
         }
-        if (settings.onEnd) {
-          settings.onEnd();
+        if (data.settings.onEnd) {
+          data.settings.onEnd();
         }
-        targetFrame = null;
+        data.targetFrame = null;
       } else {
-        currentFrame ++;
+        data.currentFrame ++;
       }
     };
   };
   
-  function updateBackgroundPosition() {
+  function updateBackgroundPosition($el) {
+    data = $el.data('spriteSequencer');
+
     var currentRow, currentColumn, xOffset, yOffset;
     
-    currentRow = Math.floor((currentFrame-1) / settings.columns);
-    currentColumn = (currentFrame-1) % settings.columns;
-    xOffset = -(settings.width * currentColumn)
-    yOffset = -(settings.height * currentRow)
+    currentRow = Math.floor((data.currentFrame-1) / data.settings.columns);
+    currentColumn = (data.currentFrame-1) % data.settings.columns;
+    xOffset = -(data.settings.width * currentColumn)
+    yOffset = -(data.settings.height * currentRow)
     
     $el.css('background-position', xOffset+"px "+yOffset+"px")
   }
