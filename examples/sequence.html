@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <title>Sprite Sequence</title>
+
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="../jquery.spriteSequencer.js"></script>
+  
+  <script type="text/javascript" charset="utf-8">
+    
+    $(document).ready(function() {
+
+      $('#sprite').spriteSequencer({
+        spriteSheet: "sprite_sheet.png",
+        columns: 30,
+        totalFrames: 30,
+        fps: 60,
+        width: 300,
+        height: 200,
+        onTick: currentFrame
+      })
+
+      $('#play').click(function() {
+        $('#sprite').spriteSequencer('play')
+      });
+
+      $('#pause').click(function() {
+        $('#sprite').spriteSequencer('pause')
+      });
+
+      $('#gotostop').click(function() {
+        $('#sprite').spriteSequencer('gotoAndStop', {frame: 20})
+      });
+
+      $('#gotoplay').click(function() {
+        $('#sprite').spriteSequencer('gotoAndPlay', {frame: 10})
+      });
+
+      $('#playto').click(function() {
+        $('#sprite').spriteSequencer('playTo', {frame: 5})
+      });
+      
+    });
+    
+    function currentFrame (frame) {
+      $('#current-frame').html("Current frame: "+ frame)
+    }
+  
+  </script>
+  
+</head>
+<body>
+
+  <div id="sprite" style="width:300px;height:200px;"></div>
+  <br />
+  <div id="current-frame">Current frame: 0</div>
+  <a href="#" id="play">Play</a><br />
+  <a href="#" id="pause">Pause</a><br />
+  <a href="#" id="gotostop">Go to and stop at frame 20</a><br />
+  <a href="#" id="gotoplay">Go to and play at frame 10</a><br />
+  <a href="#" id="playto">Play to frame 5</a><br />
+
+</body>
+</html>

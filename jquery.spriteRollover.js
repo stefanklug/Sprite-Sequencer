@@ -1,3 +1,11 @@
+/*!
+ * jQuery Sprite Sequencer Rollover
+ * https://github.com/mattfordham/Sprite-Sequencer 
+ *
+ * Copyright 2012, Matt Fordham - http://www.revolvercreative.com
+ */
+
+
 (function($){
 
   // Default Settings

@@ -1,3 +1,10 @@
+/*!
+ * jQuery Sprite Sequencer
+ * https://github.com/mattfordham/Sprite-Sequencer 
+ *
+ * Copyright 2012, Matt Fordham - http://www.revolvercreative.com
+ */
+
 (function($){
   
   // Default Settings
@@ -95,12 +102,17 @@
       return this.each(function(){
         var $el = $(this);
         var data = $el.data('spriteSequencer')
-
+        
         if (options && options.frame >= 1) {
           clearInterval(data.tickTimer);
           data.playing = false;
           data.currentFrame = options.frame;
           updateBackgroundPosition($el);
+          
+          if (data.settings.onTick) {
+            data.settings.onTick(data.currentFrame);
+          }
+          
         } else {
           logError("gotoAndStop - provide a valid frame");
         };
