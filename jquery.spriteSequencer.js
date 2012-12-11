@@ -42,6 +42,9 @@
         if(elSettings.width == null) elSettings.width = $el.width();
         if(elSettings.height == null) elSettings.height = $el.height();
         if(elSettings.columns == null) elSettings.columns = elSettings.totalFrames;
+        
+        //stop the render loop, if there is an instance
+        if($el.data('spriteSequencer')) pause($el);
 
         var data = $el.data('spriteSequencer', {
           settings: elSettings,
