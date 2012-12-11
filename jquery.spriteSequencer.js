@@ -101,7 +101,7 @@
     gotoAndStop : function(options){
       return this.each(function(){
         var $el = $(this);
-        var data = $el.data('spriteSequencer')
+        var data = $el.data('spriteSequencer');
         
         if (options && options.frame >= 1) {
           clearInterval(data.tickTimer);
@@ -178,34 +178,34 @@
 
   // Private Methods
   function preloadImage($el, image) {
-    data = $el.data('spriteSequencer');
-    img = new Image()
+    var data = $el.data('spriteSequencer');
+    var img = new Image();
     img.src = image;
     img.onload = function(){
       data = $el.data('spriteSequencer');
-      data.spriteLoaded = true
+      data.spriteLoaded = true;
       $el.css('background-image', 'url('+image+')');                  
       if (data.settings.onSpriteLoaded){
-        data.settings.onSpriteLoaded()
+        data.settings.onSpriteLoaded();
       }
       if (data.settings.autoPlay){
-        play($el)
+        play($el);
       }
     }
   }
   
   function play($el){
-    data = $el.data('spriteSequencer');
+    var data = $el.data('spriteSequencer');
     data.playing = true;
     tick($el);
-    data.tickTimer = setInterval(function(){tick($el)}, 1000/data.settings.fps);
+    data.tickTimer = setInterval(function(){ tick($el); }, 1000/data.settings.fps);
     if (data.settings.onPlay) {
-      data.settings.onPlay()
+      data.settings.onPlay();
     }
   }
      
   function tick($el) {
-    data = $el.data('spriteSequencer');
+    var data = $el.data('spriteSequencer');
     updateBackgroundPosition($el);
 
     if (data.settings.onTick) {
@@ -215,7 +215,7 @@
     if (data.playingBackwards) {
       if (data.settings.yoyo && data.currentFrame == 1) {
         data.playingBackwards = false;
-        data.currentFrame ++
+        data.currentFrame ++;
       } else if (data.currentFrame == 1 || data.currentFrame == data.targetFrame) {
 
         if (data.settings.loop && data.targetFrame == null) {
@@ -236,7 +236,7 @@
     } else {
       if (data.currentFrame == data.settings.totalFrames || data.currentFrame == data.targetFrame){ 
         if (data.settings.yoyo) {
-          data.playingBackwards = true
+          data.playingBackwards = true;
           data.currentFrame --;
         } else if (data.settings.loop && data.targetFrame == null){
           data.currentFrame = 1;
@@ -255,16 +255,16 @@
   };
   
   function updateBackgroundPosition($el) {
-    data = $el.data('spriteSequencer');
+    var data = $el.data('spriteSequencer');
 
     var currentRow, currentColumn, xOffset, yOffset;
     
     currentRow = Math.floor((data.currentFrame-1) / data.settings.columns);
     currentColumn = (data.currentFrame-1) % data.settings.columns;
-    xOffset = -(data.settings.width * currentColumn)
-    yOffset = -(data.settings.height * currentRow)
+    xOffset = -(data.settings.width * currentColumn);
+    yOffset = -(data.settings.height * currentRow);
     
-    $el.css('background-position', xOffset+"px "+yOffset+"px")
+    $el.css('background-position', xOffset+"px "+yOffset+"px");
   }
   
   function logError(message) {
