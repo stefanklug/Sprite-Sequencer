@@ -32,7 +32,7 @@
 
     init : function(options) {
 
-      var settings = $.extend(defaults, options);
+      var settings = $.extend({}, defaults, options);
 
       return this.each(function(){
 
