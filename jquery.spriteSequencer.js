@@ -11,14 +11,14 @@
   var defaults = {
     spriteSheet: null,
     autoPlay: false,
-    columns: 10,
+    columns: null,
     totalFrames: 24,
     fps: 24,
     loop: false,
     yoyo: false,
     startFrame: 1,
-    width: 100,
-    height: 100,
+    width: null,
+    height: null,
     onInit: null,
     onSpriteLoaded: null,
     onPlay: null,
@@ -36,10 +36,15 @@
 
       return this.each(function(){
 
-        var $el = $(this);                
+        var $el = $(this);
+        
+        var elSettings = $.extend({}, settings);
+        if(elSettings.width == null) elSettings.width = $el.width();
+        if(elSettings.height == null) elSettings.height = $el.height();
+        if(elSettings.columns == null) elSettings.columns = elSettings.totalFrames;
 
         var data = $el.data('spriteSequencer', {
-          settings: settings,
+          settings: elSettings,
           spriteLoaded: false,
           playing: false,
           tickTimer: null,
@@ -49,20 +54,21 @@
         });
 
         var initialStyle = {
-          width: settings.width, 
-          height: settings.height, 
+          width: elSettings.width, 
+          height: elSettings.height, 
           'display': 'block', 
           'overflow': 'hidden' 
         };
 
         $el.css(initialStyle);
 
-        if (settings.onInit){
-          settings.onInit("test");
+        if (elSettings.onInit){
+          elSettings.onInit("test");
         }
 
-        data.currentFrame = settings.startFrame;
-        preloadImage($el, settings.spriteSheet);
+        data.currentFrame = elSettings.startFrame;
+        if(elSettings.spriteSheet) preloadImage($el, elSettings.spriteSheet);
+        else imageLoaded($el);
       })
 
     },
@@ -84,18 +90,27 @@
         };
 
       });
-    }, 
+    },
+    
+    isPlaying: function() {
+    	var data = $el.data('spriteSequencer');
+    	return data.playing;
+    },
+    
+    toggle:function() {
+    	return this.each(function(){
+            var $el = $(this);
+            var data = $el.data('spriteSequencer');
+            
+            if(data.playing) pause($el);
+            else play($el);
+    	});
+    },
+    
     pause : function(){
       return this.each(function(){
         var $el = $(this);
-        var data = $el.data('spriteSequencer');
-
-        clearInterval(data.tickTimer);
-        data.playing = false;
-
-        if (data.settings.onPause) {
-          data.settings.onPause();
-        };
+        pause($el);
       });
     },
     gotoAndStop : function(options){
@@ -182,16 +197,20 @@
     var img = new Image();
     img.src = image;
     img.onload = function(){
-      data = $el.data('spriteSequencer');
-      data.spriteLoaded = true;
-      $el.css('background-image', 'url('+image+')');                  
+    	$el.css('background-image', 'url('+image+')');
+    	imageLoaded($el);
+    };
+  }
+  
+  function imageLoaded($el) {
+	  var data = $el.data('spriteSequencer');
+      data.spriteLoaded = true;         
       if (data.settings.onSpriteLoaded){
         data.settings.onSpriteLoaded();
       }
       if (data.settings.autoPlay){
         play($el);
       }
-    }
   }
   
   function play($el){
@@ -202,6 +221,17 @@
     if (data.settings.onPlay) {
       data.settings.onPlay();
     }
+  }
+  
+  function pause($el) {
+	  var data = $el.data('spriteSequencer');
+
+      clearInterval(data.tickTimer);
+      data.playing = false;
+
+      if (data.settings.onPause) {
+        data.settings.onPause();
+      };
   }
      
   function tick($el) {
