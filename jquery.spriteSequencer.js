@@ -72,7 +72,7 @@
         data.currentFrame = elSettings.startFrame;
         if(elSettings.spriteSheet) preloadImage($el, elSettings.spriteSheet);
         else imageLoaded($el);
-      })
+      });
 
     },
     play : function(){
@@ -96,7 +96,7 @@
     },
     
     isPlaying: function() {
-    	var data = $el.data('spriteSequencer');
+    	var data = $(this).data('spriteSequencer');
     	return data.playing;
     },
     
@@ -213,6 +213,8 @@
       }
       if (data.settings.autoPlay){
         play($el);
+      } else {
+    	  updateBackgroundPosition($el);
       }
   }
   
