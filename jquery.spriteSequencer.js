@@ -84,7 +84,7 @@
 
         if (data.spriteLoaded) {
           if (data.playing || data.currentFrame == data.settings.totalFrames) {
-            clearInterval(data.tickTimer);
+            unregisterFrameCallback(data.tickTimer);
             data.currentFrame = 1;
           };
           play($el);
@@ -122,7 +122,7 @@
         var data = $el.data('spriteSequencer');
         
         if (options && options.frame >= 1) {
-          clearInterval(data.tickTimer);
+          unregisterFrameCallback(data.tickTimer);
           data.playing = false;
           data.currentFrame = options.frame;
           updateBackgroundPosition($el);
@@ -143,7 +143,7 @@
         var data = $el.data('spriteSequencer');
 
         if (options && options.frame >= 1) {
-          clearInterval(data.tickTimer);
+          unregisterFrameCallback(data.tickTimer);
           data.currentFrame = options.frame;
 
           if (data.currentFrame > data.settings.totalFrames) {
@@ -161,7 +161,7 @@
         var data = $el.data('spriteSequencer');
 
         if (options && options.frame >= 1) {
-          clearInterval(data.tickTimer);
+          unregisterFrameCallback(data.tickTimer);
           data.targetFrame = options.frame;
 
           if (data.targetFrame > data.settings.totalFrames) {
@@ -171,7 +171,7 @@
             data.currentFrame -= 1;
             data.playingBackwards = true;
           } else {
-            data.playingBackwards = false
+            data.playingBackwards = false;
           }
           if (data.targetFrame != data.currentFrame) {          
             play($el);
@@ -179,8 +179,18 @@
         } else {
           logError("playTo - provide a valid frame");
         };
-      })
-    }  
+      });
+    }, 
+    remove: function(options){
+    	return this.each(function(){
+	        var $el = $(this);
+	        var data = $el.data('spriteSequencer');
+	        unregisterFrameCallback(data.tickTimer);
+	        $el.removeData('spriteSequencer');
+	        $el.css('background-image', "");
+	        $el.css('background-position', "");
+    	});
+    }
   };
 
   // Main Plugin Function
@@ -195,7 +205,7 @@
   };
 
   // Private Methods
-  function preloadImage($el, image) {
+  function preloadImage($el, image) {	  
     var data = $el.data('spriteSequencer');
     var img = new Image();
     img.src = image;
@@ -222,7 +232,7 @@
     var data = $el.data('spriteSequencer');
     data.playing = true;
     tick($el);
-    data.tickTimer = setInterval(function(){ tick($el); }, 1000/data.settings.fps);
+    data.tickTimer = registerFrameCallback(function(){ tick($el); }, data.settings.fps)
     if (data.settings.onPlay) {
       data.settings.onPlay();
     }
@@ -231,7 +241,7 @@
   function pause($el) {
 	  var data = $el.data('spriteSequencer');
 
-      clearInterval(data.tickTimer);
+      unregisterFrameCallback(data.tickTimer);
       data.playing = false;
 
       if (data.settings.onPause) {
@@ -258,7 +268,7 @@
         } else {
           data.playingBackwards = false;
           data.playing = false;
-          clearInterval(data.tickTimer);
+          unregisterFrameCallback(data.tickTimer);
         };
 
         if (data.settings.onEnd) {
@@ -277,7 +287,7 @@
           data.currentFrame = 1;
         } else {
           data.playing = false;
-          clearInterval(data.tickTimer);
+          unregisterFrameCallback(data.tickTimer);
         }
         if (data.settings.onEnd) {
           data.settings.onEnd();
@@ -304,6 +314,59 @@
   
   function logError(message) {
     console.log("Sprite Sequencer Error: "+ message);
+  }
+  
+  var callbackRegister = {
+	nextId:1,
+	byId:{},
+	byFps:{},
+  };
+  
+  function registerFrameCallback(cb, fps) {
+	  if(false) {
+		  return setInterval(cb, 1000/fps);
+	  } else {
+		  var r;
+		  var kfps = "fps"+fps;
+		  if(!callbackRegister.byFps[kfps]) {
+			  r = {};
+			  r.key = kfps;
+			  r.timer = setInterval(function() {
+				  for (var k in r.callbacks) r.callbacks[k]();
+			  }, 1000/fps);
+			  r.count = 0;
+			  r.callbacks = {};
+			  callbackRegister.byFps[kfps] = r;
+		  } else {
+			  r = callbackRegister.byFps[kfps];
+		  }
+		  
+		  var id = callbackRegister.nextId++;
+		  var key = "cb"+id;
+		  r.count++;
+		  r.callbacks[key] = cb;
+		  callbackRegister.byId[key] = r;
+		  return id;
+	  }
+  }
+  
+  function unregisterFrameCallback(id) {
+	  if(false) {
+		  clearInterval(id);
+	  } else {
+		  var key = "cb"+id;
+		  if(!callbackRegister.byId[key]) return;
+		  
+		  var r = callbackRegister.byId[key];
+		  delete callbackRegister.byId[key];
+		  delete r.callbacks[key];
+		  r.count--;
+		  if(r.count == 0) {
+			  clearInterval(r.timer);
+			  delete callbackRegister.byFps[r.key];
+		  }
+		  
+	  }
   }
 
 })(jQuery);
